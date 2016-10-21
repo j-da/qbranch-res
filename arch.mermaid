@@ -1,0 +1,44 @@
+graph TD
+  subgraph Server
+    c[Controller]
+
+    ga[Gateway Adaptors]
+    c---ga
+
+    api["User Server (REST API)"]
+    c---api
+
+    xm[Extension Adaptors]
+    c---xm
+
+    subgraph Data
+      db((Database))
+      lg[Logging]
+    end
+    c---db
+    c---lg
+  end
+
+  subgraph Actuators
+    gm[Mock Adaptor]
+    gs[Samsung SmartThings Adaptor]
+    ga---gm
+    ga---gs
+
+    a0[Actuator]
+    a1[Actuator]
+    gs---a0
+    gs---a1
+  end
+
+  subgraph User Interfaces
+    ui0[User Interface]
+    ui1[User Interface]
+    api---ui0
+    api---ui1
+  end
+
+  subgraph Integrations
+    xg[Google Calendar]
+    xm---xg
+  end
