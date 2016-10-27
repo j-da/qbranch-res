@@ -2,13 +2,13 @@ graph TD
   subgraph Server
     c[Controller]
 
-    ga[Gateway Adaptors]
+    ga["[Gateway Adaptors]"]
     c---ga
 
     api["User Server (REST API)"]
-    c---api
+    c--Signature---api
 
-    xm[Extension Adaptors]
+    xm["[Extension Adaptors]"]
     c---xm
 
     subgraph Data
@@ -22,8 +22,8 @@ graph TD
   subgraph Actuators
     gm[Mock Adaptor]
     gs[Samsung SmartThings Adaptor]
-    ga---gm
-    ga---gs
+    ga--OAuth2---gm
+    ga--OAuth2---gs
 
     a0[Actuator]
     a1[Actuator]
@@ -34,11 +34,11 @@ graph TD
   subgraph User Interfaces
     ui0[User Interface]
     ui1[User Interface]
-    api---ui0
-    api---ui1
+    api--OAuth2---ui0
+    api--OAuth2---ui1
   end
 
   subgraph Integrations
     xg[Google Calendar]
-    xm---xg
+    xm--OAuth2---xg
   end
