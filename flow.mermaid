@@ -1,0 +1,71 @@
+sequenceDiagram
+  Note over App, API: Refresh device list
+  App->>+API: POST /devices/refresh
+  API->>+Controller: ...
+  Note over Controller: async
+  Controller->>+Bridge: refreshAll
+  Controller->>+Redis: SMEMBERS devices
+  Bridge->>-Controller: ...
+  Redis->>-Controller: ...
+  Note over Controller: await, diff -> newDevices
+  Controller->>+Redis: SADD devices newDevices.id, SADD zones:misc:devices newDevices.id
+  Redis->>-Controller: 2
+  Controller->>-API: OK
+  API->>-App: OK
+
+  Note over App, API: List zones
+  App->>+API: GET /zones
+  API->>+Controller: ...
+  Controller->>+Redis: SMEMBERS zones
+  Redis->>-Controller: ...
+  Note over Controller: JSONify
+  Controller->>-API: ...
+  API->>-App: ...
+
+  Note over App, API: List heaters in zone
+  App->>+API: GET /zone/{id}/heaters
+  API->>+Controller: ...
+  Controller->>+Redis: SMEMBERS zones:{id}:devices
+  Redis->>-Controller: ...
+  Note over Controller: Arrayify
+  Controller->>-API: ...
+  API->>-App: ...
+
+  Note over App, API: Move heaters between zones
+  App->>+API: POST /zone/{oldZone}/heaters/{id}/moveTo/{newZone}
+  API->>+Controller: ...
+  Controller->>+Redis: SMOVE zones:{id}:devices
+  Redis->>-Controller: OK
+  Controller->>-API: OK
+  API->>-App: OK
+
+  Note over App, API: Get zone temperature
+  App->>+API: GET zone/{id}/temp
+  API->>+Controller: ...
+  Controller->>+Redis: GET zones:id:temp
+  Redis->>-Controller: temp | nil
+  opt nil
+    Controller->>+Bridge: ...
+    Bridge->>-Controller: temp
+    Controller->>+Redis: SETPX zones:id:temp 5m
+    Redis->>-Controller: OK
+  end
+  Controller->>-API: temp
+  API->>-App: ...
+
+  Note over App, API: Set target temperature
+  App->>+API: POST /zone/{id}/temp/{target}
+  API->>+Controller: ...
+  Note over Controller, Bridge: /zone/{id}/temp -> temp
+  alt target < temp
+    Controller->>+Bridge: /zone/{id}/on
+    Bridge->>-Controller: OK
+    loop every 5m
+      Note over Controller, Bridge: /zone/{id}/temp -> temp
+    end
+  else
+    Controller->>+Bridge: /zone/{id}/off
+    Bridge->>-Controller: OK
+  end
+  Controller->>-API: ...
+  API->>-App: ...
